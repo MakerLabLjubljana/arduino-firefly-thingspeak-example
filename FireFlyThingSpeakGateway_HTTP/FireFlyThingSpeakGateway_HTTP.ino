@@ -8,7 +8,7 @@
  * This example was tested on Arduino Uno and Arduino Mega ADK using a Ethernet Shield and an XBee shield.
  */
 #include <ArduinoJson.h>
-#include "FireFly.h" //Sensor board communication functions
+#include "FireFly.h"
 #include <SPI.h>
 #include <Ethernet.h>
 
@@ -16,21 +16,23 @@ byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 EthernetClient client; 
 
 // ThingSpeak constants
-const String writeAPIKey = "<WRITE_API_KEY>"; //Your channel's write key
+const String writeAPIKey = "TS54AH7N8U8ECH2L"; //Your channel's write key
 
 int SerialMessageLength = 200;
 char data[200] = {}; //serial buffer
 int index = 0;
 bool cloudSend = false;
 
-/*
- * Sends thingspeak field data via a HTTP GET request.
- * Avoiding the ThingSpeak library to minimize memory usage.
- */
+// Generally, you should use "unsigned long" for variables that hold time
+// The value will quickly become too large for an int to store
+unsigned long previousMillis = 0;
+
+
 void tsUpdate(String data){
   client.stop(); //Stop a previously started client to prevent any hickups in communication
   if (client.connect("api.thingspeak.com", 80)){
     Serial.println("connected");
+    
     // Make a HTTP request:
     client.println("GET /update?api_key="+writeAPIKey+"&"+data+" HTTP/1.1");
     client.println("Host: api.thingspeak.com");
@@ -50,9 +52,7 @@ void setup() {
   Ethernet.begin(mac);
   Serial.println("Ethernet connected!");
   
-  delay(5000);
   FFSetSensors("909", 1, 1, 1, 1, 1, 1);
-  FFSetOutput("909", 0, 0, 0, 1, 1);
   FFContinuousResponse("909", "3", "15");
 }
 
@@ -91,7 +91,9 @@ void loop() {
     }
     if(cloudSend == true){
       cloudSend = false;
-
+      //Serial.print(data);
+      //Serial.print("\r");
+      
       StaticJsonBuffer<200> jsonBuffer;
       JsonObject& root = jsonBuffer.parseObject(data);
 
@@ -99,7 +101,6 @@ void loop() {
         Serial.println("parseObject() failed");
         return;
       }
-      
       //here you extract parsed json data like you would from a table
       int lux = root["d"]["Lum"];
       float temp = root["d"]["Temp"];
