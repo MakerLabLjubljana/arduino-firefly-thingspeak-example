@@ -129,7 +129,6 @@ void loop() {
       //Serial.println("T: "+String(temp)+" H: "+String(hum)+" L: "+String(lux));
 
       data[0] = '\0'; //clear data array
-      data[0] = (char)0; //Just to be sure :D
       break;
     } 
   }
